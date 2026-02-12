@@ -1,0 +1,163 @@
+---
+// src/pages/admin/index.astro
+export const prerender = false;
+
+import AdminLayout from "@/layouts/AdminLayout.astro";
+
+// --- 1. FETCH DATA STATISTIK ---
+let stats = {
+  guru: 0,
+  siswa: 0, // Nanti kalau modul siswa sudah dibuat
+  surat_masuk: 0,
+  surat_keluar: 0,
+  artikel: 0,
+  recent_activities: []
+};
+
+let errorMsg = null;
+
+try {
+  const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+  
+  // Kita fetch paralel biar cepat
+  const [resGuru, resSuratMasuk, resSuratKeluar, resBlog] = await Promise.all([
+     fetch(`${SCRIPT_URL}?action=get_all&table=tbl_guru`),
+     fetch(`${SCRIPT_URL}?action=get_all&table=tbl_surat_masuk`),
+     fetch(`${SCRIPT_URL}?action=get_all&table=tbl_surat_keluar`),
+     fetch(`${SCRIPT_URL}?action=get_all&table=tbl_posts`)
+  ]);
+
+  const dataGuru = await resGuru.json();
+  const dataSuratMasuk = await resSuratMasuk.json();
+  const dataSuratKeluar = await resSuratKeluar.json();
+  const dataBlog = await resBlog.json();
+
+  if(dataGuru.status === 'success') stats.guru = dataGuru.data.length;
+  if(dataSuratMasuk.status === 'success') stats.surat_masuk = dataSuratMasuk.data.length;
+  if(dataSuratKeluar.status === 'success') stats.surat_keluar = dataSuratKeluar.data.length;
+  if(dataBlog.status === 'success') stats.artikel = dataBlog.data.length;
+
+  // Gabungkan aktivitas terbaru (Contoh sederhana)
+  // Di sistem real, biasanya ada tabel 'logs', tapi kita pakai data terakhir yg diinput aja
+  const latestBlog = dataBlog.status === 'success' ? dataBlog.data.slice(-2).map(i => ({ type: 'Artikel', title: i.title, date: i.created_at })) : [];
+  const latestSurat = dataSuratMasuk.status === 'success' ? dataSuratMasuk.data.slice(-2).map(i => ({ type: 'Surat Masuk', title: i.perihal, date: i.created_at })) : [];
+  
+  stats.recent_activities = [...latestBlog, ...latestSurat].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+} catch (e) {
+  errorMsg = "Gagal memuat statistik. Pastikan backend aktif.";
+}
+---
+
+<AdminLayout title="Dashboard Sekolah">
+    
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-800">Dashboard Ikhtisar</h1>
+        <p class="text-slate-500">Selamat datang di Panel Administrasi Sekolah.</p>
+    </div>
+
+    {errorMsg && (
+        <div class="bg-red-50 text-red-600 p-4 rounded-lg mb-6 text-sm">{errorMsg}</div>
+    )}
+
+    {/* --- STATS CARDS --- */}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        {/* Card Guru */}
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+            <div>
+                <p class="text-slate-500 text-sm font-medium uppercase tracking-wider">Total Guru</p>
+                <h3 class="text-3xl font-bold text-slate-800 mt-2">{stats.guru}</h3>
+                <a href="/admin/guru" class="text-indigo-600 text-xs font-bold mt-2 inline-block hover:underline">Kelola Data →</a>
+            </div>
+            <div class="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" x2="20" y1="8" y2="14"/><line x1="23" x2="17" y1="11" y2="11"/></svg>
+            </div>
+        </div>
+
+        {/* Card Surat Masuk */}
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+            <div>
+                <p class="text-slate-500 text-sm font-medium uppercase tracking-wider">Surat Masuk</p>
+                <h3 class="text-3xl font-bold text-slate-800 mt-2">{stats.surat_masuk}</h3>
+                <a href="/admin/surat-masuk" class="text-emerald-600 text-xs font-bold mt-2 inline-block hover:underline">Lihat Arsip →</a>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
+        </div>
+
+        {/* Card Surat Keluar */}
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+            <div>
+                <p class="text-slate-500 text-sm font-medium uppercase tracking-wider">Surat Keluar</p>
+                <h3 class="text-3xl font-bold text-slate-800 mt-2">{stats.surat_keluar}</h3>
+                <a href="/admin/surat-keluar" class="text-blue-600 text-xs font-bold mt-2 inline-block hover:underline">Buat Baru →</a>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-xl text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"/><path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"/></svg>
+            </div>
+        </div>
+
+        {/* Card Artikel */}
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start justify-between">
+            <div>
+                <p class="text-slate-500 text-sm font-medium uppercase tracking-wider">Artikel / Berita</p>
+                <h3 class="text-3xl font-bold text-slate-800 mt-2">{stats.artikel}</h3>
+                <a href="/admin/posts" class="text-orange-600 text-xs font-bold mt-2 inline-block hover:underline">Tulis Berita →</a>
+            </div>
+            <div class="p-3 bg-orange-50 rounded-xl text-orange-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+            </div>
+        </div>
+
+    </div>
+
+    {/* --- SECTION BAWAH --- */}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Recent Activities */}
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <h3 class="font-bold text-lg mb-4 text-slate-800">Aktivitas Terbaru</h3>
+            <div class="space-y-4">
+                {stats.recent_activities.length > 0 ? stats.recent_activities.map((item, idx) => (
+                    <div class="flex items-center gap-4 pb-4 border-b border-slate-50 last:border-0 last:pb-0">
+                        <div class={`w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold ${item.type === 'Artikel' ? 'bg-orange-500' : 'bg-emerald-500'}`}>
+                            {item.type === 'Artikel' ? 'A' : 'S'}
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-800">{item.title}</p>
+                            <div class="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                                <span>{item.type}</span>
+                                <span>•</span>
+                                <span>{new Date(item.date).toLocaleDateString('id-ID')}</span>
+                            </div>
+                        </div>
+                    </div>
+                )) : (
+                    <p class="text-slate-400 text-sm">Belum ada aktivitas.</p>
+                )}
+            </div>
+        </div>
+
+        {/* Quick Links / Shortcut */}
+        <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
+            <h3 class="font-bold text-lg mb-2">Shortcut Admin</h3>
+            <p class="text-indigo-100 text-sm mb-6">Akses cepat menu yang sering digunakan.</p>
+            
+            <div class="space-y-3">
+                <a href="/admin/posts" class="block bg-white/10 hover:bg-white/20 border border-white/10 p-3 rounded-xl text-sm font-medium transition flex items-center gap-3">
+                    ✏️ Tulis Berita Baru
+                </a>
+                <a href="/admin/surat-masuk" class="block bg-white/10 hover:bg-white/20 border border-white/10 p-3 rounded-xl text-sm font-medium transition flex items-center gap-3">
+                    📥 Catat Surat Masuk
+                </a>
+                <a href="/admin/guru" class="block bg-white/10 hover:bg-white/20 border border-white/10 p-3 rounded-xl text-sm font-medium transition flex items-center gap-3">
+                    👨‍🏫 Data Guru & Staf
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</AdminLayout>

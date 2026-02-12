@@ -1,0 +1,35 @@
+---
+// src/pages/admin/surat-keluar/index.astro
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import SuratKeluarManager from "../../../components/admin/SuratKeluarManager.jsx"; // Pastikan path benar
+
+let suratData = [];
+let sheetError = null;
+
+try {
+  const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+  // Fetch data dari tabel 'tbl_surat_keluar'
+  const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_surat_keluar`);
+  const result = await response.json();
+
+  if (result.status === "success") {
+    suratData = result.data.reverse(); 
+  } else {
+    sheetError = result.message;
+  }
+} catch (e) {
+  sheetError = "Gagal koneksi ke server.";
+}
+---
+
+<AdminLayout title="Surat Keluar">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-slate-800">Surat Keluar</h2>
+        <p class="text-sm text-slate-500">Manajemen arsip surat keluar sekolah.</p>
+    </div>
+
+    <SuratKeluarManager client:only="react" initialData={suratData} sheetError={sheetError} />
+
+</AdminLayout>

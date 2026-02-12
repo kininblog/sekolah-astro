@@ -1,0 +1,72 @@
+---
+import Base from "@/layouts/Base.astro";
+---
+
+<Base title="Dashboard Admin">
+  <div class="flex min-h-screen bg-gray-50">
+    <aside class="w-64 bg-slate-900 text-white p-6 hidden md:block">
+      <h3 class="text-xl font-bold mb-8 text-blue-400">Admin CMS</h3>
+      <nav class="space-y-4">
+        <a href="/admin" class="block hover:text-blue-300">📊 Dashboard</a>
+        <a href="/admin/posts" class="block hover:text-blue-300">📝 Berita/Post</a>
+        <a href="/admin/jurusan" class="block hover:text-blue-300">🎓 Jurusan</a>
+        <a href="/admin/settings" class="block hover:text-blue-300">⚙️ Pengaturan</a>
+        <button id="logoutBtn" class="block text-red-400 mt-10">🚪 Keluar</button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+      <div id="authGuard" class="hidden">
+        <div class="flex justify-between items-center mb-8">
+          <h2 id="welcomeText">Selamat Datang, Admin</h2>
+          <div class="space-x-2">
+             <button id="installDb" class="btn btn-outline-primary btn-sm">Install Database</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+            <p class="text-gray-500 text-sm">Total Berita</p>
+            <h4 class="text-2xl font-bold" id="countPosts">0</h4>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+            <p class="text-gray-500 text-sm">Total Jurusan</p>
+            <h4 class="text-2xl font-bold" id="countJurusan">0</h4>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow border">
+          <h4 class="mb-4 text-lg font-semibold">Aktifitas Terakhir</h4>
+          <p class="text-gray-500">Silahkan pilih menu di samping untuk mengelola konten.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Proteksi Halaman (Auth Guard)
+    const user = localStorage.getItem('admin_user');
+    if (!user) {
+      window.location.href = '/login';
+    } else {
+      document.getElementById('authGuard')?.classList.remove('hidden');
+      const userData = JSON.parse(user);
+      (document.getElementById('welcomeText') as HTMLElement).innerText = `Halo, ${userData.name}`;
+    }
+
+    // Logout
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+      localStorage.removeItem('admin_user');
+      window.location.href = '/login';
+    });
+
+    // Install DB (Fungsi yang kita buat sebelumnya)
+    document.getElementById('installDb')?.addEventListener('click', async () => {
+       const url = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+       alert("Proses installasi dimulai...");
+       const res = await fetch(`${url}?action=system_install`);
+       const data = await res.json();
+       alert("Selesai: " + data.data.logs.join(", "));
+    });
+  </script>
+</Base>

@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import GuruForm from "@/components/admin/GuruForm.jsx";
+---
+
+<AdminLayout title="Tambah Guru">
+    <GuruForm client:only="react" />
+</AdminLayout>

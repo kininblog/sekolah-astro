@@ -1,0 +1,23 @@
+---
+export const prerender = false;
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import GuruForm from "@/components/admin/GuruForm.jsx";
+
+const { id } = Astro.params;
+let detailGuru = null;
+
+try {
+  const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+  const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_guru`);
+  const result = await response.json();
+  if (result.status === "success") {
+    detailGuru = result.data.find(item => item.id === id);
+  }
+} catch (e) { console.error(e); }
+
+if (!detailGuru) return Astro.redirect('/admin/guru');
+---
+
+<AdminLayout title="Detail Guru">
+    <GuruForm client:only="react" initialData={detailGuru} />
+</AdminLayout>

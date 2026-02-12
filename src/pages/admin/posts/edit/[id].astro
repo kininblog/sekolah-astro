@@ -1,0 +1,72 @@
+---
+// src/pages/admin/posts/edit/[id].astro
+export const prerender = false; // Wajib False agar bisa baca ID dinamis
+
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import PostEditor from "@/components/admin/PostEditor.jsx";
+
+const { id } = Astro.params;
+let postData = null;
+let error = null;
+
+// FETCH DATA BERDASARKAN ID
+try {
+  const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+  // Kita ambil semua data dulu (karena endpoint Google Script biasanya return all)
+  // Lalu kita filter di sini (Client/Server Astro Side)
+  const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_posts`);
+  const result = await response.json();
+
+  if (result.status === "success") {
+    // Cari post yang ID-nya cocok
+    postData = result.data.find(p => p.id === id);
+    
+    if (!postData) {
+        error = "Postingan tidak ditemukan (ID salah atau sudah dihapus).";
+    }
+  } else {
+    error = result.message;
+  }
+} catch (e) {
+  console.error(e);
+  error = "Gagal mengambil data dari server.";
+}
+
+if (!id) {
+    return Astro.redirect('/admin/posts');
+}
+---
+
+<AdminLayout title="Edit Postingan">
+    
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-2xl font-bold text-slate-800">
+            Edit Berita
+        </h2>
+        <nav>
+            <ol class="flex items-center gap-2 text-sm">
+                <li><a class="text-slate-500 hover:text-indigo-600" href="/admin">Dashboard /</a></li>
+                <li><a class="text-slate-500 hover:text-indigo-600" href="/admin/posts">Postingan /</a></li>
+                <li class="font-medium text-indigo-600">Edit</li>
+            </ol>
+        </nav>
+    </div>
+
+    {error && (
+        <div class="p-6 bg-red-50 border border-red-200 rounded-xl text-center">
+            <div class="inline-flex p-3 bg-red-100 rounded-full text-red-600 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-red-800 mb-1">Terjadi Kesalahan</h3>
+            <p class="text-red-600 mb-4">{error}</p>
+            <a href="/admin/posts" class="text-sm font-bold underline hover:text-red-900">Kembali ke Daftar</a>
+        </div>
+    )}
+
+    {postData && (
+        // Kita kirim data yang ditemukan ke prop 'initialData'
+        // client:only="react" wajib agar React berjalan penuh di browser
+        <PostEditor client:only="react" initialData={postData} />
+    )}
+
+</AdminLayout>

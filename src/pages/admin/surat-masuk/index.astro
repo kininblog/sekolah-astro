@@ -1,0 +1,34 @@
+---
+// src/pages/admin/surat-masuk/index.astro
+export const prerender = false;
+
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import SuratMasukManager from "../../../components/admin/SuratMasukManager.jsx";
+let suratData = [];
+let sheetError = null;
+
+try {
+  const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+  const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_surat_masuk`);
+  const result = await response.json();
+
+  if (result.status === "success") {
+    // Sort terbaru (berdasarkan id uuid atau created_at)
+    suratData = result.data.reverse(); 
+  } else {
+    sheetError = result.message;
+  }
+} catch (e) {
+  sheetError = "Gagal koneksi ke server.";
+}
+---
+
+<AdminLayout title="Surat Masuk">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-slate-800">Surat Masuk</h2>
+        <p class="text-sm text-slate-500">Kelola arsip surat masuk dan disposisi.</p>
+    </div>
+
+    <SuratMasukManager client:only="react" initialData={suratData} sheetError={sheetError} />
+
+</AdminLayout>

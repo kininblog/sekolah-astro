@@ -1,0 +1,10 @@
+---
+// src/pages/logout.astro
+export const prerender = false; // Mode Server (Wajib)
+
+// 1. Hapus Cookie Sesi
+Astro.cookies.delete("admin_session", { path: "/" });
+
+// 2. Redirect ke Halaman Login
+return Astro.redirect("/login");
+---

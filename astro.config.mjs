@@ -9,13 +9,20 @@ import remarkToc from "remark-toc";
 import sharp from "sharp";
 import config from "./src/config/config.json";
 
+import node from "@astrojs/node";
+
 // https://astro.build/config
 export default defineConfig({
+  // --- TAMBAHKAN BARIS INI (WAJIB) ---
+  output: 'server', 
+  // -----------------------------------
+
   site: config.site.base_url ? config.site.base_url : "http://examplesite.com",
   base: config.site.base_path ? config.site.base_path : "/",
   trailingSlash: config.site.trailing_slash ? "always" : "never",
   image: { service: sharp() },
   vite: { plugins: [tailwindcss()] },
+
   integrations: [
     react(),
     sitemap(),
@@ -32,9 +39,14 @@ export default defineConfig({
     }),
     mdx(),
   ],
+
   markdown: {
     remarkPlugins: [remarkToc, [remarkCollapse, { test: "Table of contents" }]],
     shikiConfig: { theme: "one-dark-pro", wrap: true },
     extendDefaultPlugins: true,
   },
+
+  adapter: node({
+    mode: "standalone",
+  }),
 });

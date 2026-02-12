@@ -1,0 +1,30 @@
+---
+// src/pages/admin/guru/index.astro
+export const prerender = false;
+
+import AdminLayout from "@/layouts/AdminLayout.astro";
+// Gunakan titik-titik (Relative Path) agar aman
+import GuruList from "../../../components/admin/GuruList.jsx";
+let guruData = [];
+let sheetError = null;
+
+try {
+  const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+  // Ambil data dari tabel 'tbl_guru'
+  const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_guru`);
+  const result = await response.json();
+
+  if (result.status === "success") {
+    // Reverse agar data terbaru muncul di atas
+    guruData = result.data.reverse();
+  } else {
+    sheetError = result.message;
+  }
+} catch (e) {
+  sheetError = "Gagal menghubungi server database.";
+}
+---
+
+<AdminLayout title="Data Guru & Staf">
+    <GuruList client:only="react" initialData={guruData} sheetError={sheetError} />
+</AdminLayout>

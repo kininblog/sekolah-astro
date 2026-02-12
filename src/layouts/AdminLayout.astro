@@ -1,0 +1,272 @@
+---
+import "@/styles/main.css";
+const { title } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+// --- KONFIGURASI MENU ---
+// Ubah/Tambah menu cukup di sini, HTML di bawah akan otomatis menyesuaikan.
+const menuItems = [
+    { 
+        label: 'Dashboard', 
+        href: '/admin', 
+        icon: 'layout-dashboard',
+        single: true 
+    },
+    {
+        label: 'Konten Website',
+        icon: 'globe',
+        id: 'content',
+        items: [
+            { label: 'Postingan', href: '/admin/posts' },
+            { label: 'Pages', href: '/admin/pages' },
+            { label: 'Media Galeri', href: '/admin/media' },
+            { label: 'Komentar', href: '/admin/comments' }
+        ]
+    },
+    {
+        label: 'Kesiswaan',
+        icon: 'users',
+        id: 'students',
+        items: [
+            { label: 'Data Kelas', href: '/admin/kelas' },
+            { label: 'Data Siswa', href: '/admin/siswa' },
+            { label: 'Absensi Siswa', href: '/admin/absensi-siswa' },
+            { label: 'Prestasi', href: '/admin/prestasi' },
+            { label: 'Alumni', href: '/admin/alumni' }
+        ]
+    },
+    {
+        label: 'Keguruan',
+        icon: 'briefcase',
+        id: 'teachers',
+        items: [
+            { label: 'Data Guru', href: '/admin/guru' },
+            { label: 'Absensi Guru', href: '/admin/absensi-guru' },
+            { label: 'Jadwal Mengajar', href: '/admin/jadwal-guru' }
+        ]
+    },
+    {
+        label: 'Akademik',
+        icon: 'graduation-cap',
+        id: 'academic',
+        items: [
+            { label: 'Nilai & Rapor', href: '/admin/nilai' },
+            { label: 'Jadwal Pelajaran', href: '/admin/jadwal' },
+            { label: 'Ujian / CBT', href: '/admin/ujian' },
+            { label: 'Tugas', href: '/admin/tugas' }
+        ]
+    },
+    {
+        label: 'Administrasi',
+        icon: 'mail',
+        id: 'admin',
+        items: [
+            { label: 'Surat Masuk', href: '/admin/surat-masuk' },
+            { label: 'Surat Keluar', href: '/admin/surat-keluar' },
+            { label: 'Arsip Surat', href: '/admin/arsip' }
+        ]
+    },
+    {
+        label: 'Tools',
+        icon: 'wrench',
+        id: 'tools',
+        items: [
+            { label: 'Buku Tamu', href: '/admin/buku-tamu' },
+            { label: 'Pengumuman', href: '/admin/pengumuman' },
+            { label: 'Agenda', href: '/admin/agenda' },
+            { label: 'Backup Data', href: '/admin/backup' }
+        ]
+    },
+    {
+        label: 'Manajemen User',
+        href: '/admin/users',
+        icon: 'shield',
+        single: true
+    },
+    {
+        label: 'Pengaturan',
+        href: '/admin/settings',
+        icon: 'settings',
+        single: true
+    }
+];
+---
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title} | Admin Sekolah</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script is:inline src="https://unpkg.com/lucide@latest"></script>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Smooth Accordion */
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu.open { max-height: 500px; transition: max-height 0.5s ease-in; }
+        .arrow-icon { transition: transform 0.3s; }
+        .arrow-icon.rotate { transform: rotate(180deg); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <aside id="sidebar" class="absolute left-0 top-0 z-50 flex h-screen w-72 flex-col overflow-y-hidden bg-slate-900 duration-300 ease-linear lg:static lg:translate-x-0 -translate-x-full shadow-2xl lg:shadow-none border-r border-slate-800">
+            
+            <div class="flex items-center justify-between gap-2 px-6 py-5 bg-slate-950 border-b border-slate-800">
+                <a href="/admin" class="flex items-center gap-3 font-bold text-white text-xl tracking-tight">
+                    <div class="bg-indigo-600 p-2 rounded-lg shadow-lg shadow-indigo-500/20">
+                        <i data-lucide="school" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <span>Sekolah<span class="text-indigo-400">App</span></span>
+                </a>
+                <button id="closeSidebar" class="block lg:hidden text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear px-4 py-6">
+                <ul class="flex flex-col gap-1.5">
+                    
+                    {/* --- MENU GENERATOR LOOP --- */}
+                    {menuItems.map((item) => (
+                        item.single ? (
+                            // JIKA MENU TUNGGAL (Tanpa Submenu)
+                            <li>
+                                <a href={item.href} class={`group relative flex items-center gap-3 rounded-lg py-2.5 px-4 font-medium duration-200 ease-in-out ${currentPath === item.href ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                                    <i data-lucide={item.icon} class="w-5 h-5"></i>
+                                    {item.label}
+                                </a>
+                            </li>
+                        ) : (
+                            // JIKA MENU DENGAN SUBMENU (Accordion)
+                            <li>
+                                <button class="group w-full relative flex items-center justify-between gap-3 rounded-lg py-2.5 px-4 font-medium text-slate-400 duration-200 ease-in-out hover:bg-slate-800 hover:text-white accordion-btn" data-target={item.id}>
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide={item.icon} class="w-5 h-5"></i>
+                                        {item.label}
+                                    </div>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 arrow-icon"></i>
+                                </button>
+                                
+                                <div id={item.id} class="submenu pl-11">
+                                    <ul class="pt-1 pb-2 flex flex-col gap-1">
+                                        {item.items.map((sub) => (
+                                            <li>
+                                                <a href={sub.href} class={`relative flex items-center gap-2 rounded-md py-2 px-4 text-sm duration-200 ${currentPath === sub.href ? 'text-indigo-400 bg-slate-800' : 'text-slate-500 hover:text-slate-300'}`}>
+                                                    <span class={`w-1.5 h-1.5 rounded-full ${currentPath === sub.href ? 'bg-indigo-400' : 'bg-slate-600 group-hover:bg-slate-400'}`}></span>
+                                                    {sub.label}
+                                                </a>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </li>
+                        )
+                    ))}
+
+                </ul>
+                
+                <div class="mt-8 pt-4 border-t border-slate-800">
+                    <a href="/logout" class="group flex items-center gap-3 rounded-lg py-2.5 px-4 font-medium text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-all">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                        Keluar Aplikasi
+                    </a>
+                </div>
+
+            </div>
+        </aside>
+        <div class="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+            
+            <header class="sticky top-0 z-40 flex w-full bg-white shadow-sm border-b border-slate-200/80 backdrop-blur-md bg-white/90">
+                <div class="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+                    <div class="flex items-center gap-4">
+                        <button id="openSidebar" class="lg:hidden p-2 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                            <i data-lucide="menu" class="w-5 h-5"></i>
+                        </button>
+                        <h2 class="text-lg font-bold text-slate-800 hidden sm:block">
+                            {title}
+                        </h2>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="hidden text-right md:block">
+                            <span class="block text-sm font-medium text-slate-800">Administrator</span>
+                            <span class="block text-xs text-slate-500">Super Admin</span>
+                        </div>
+                        <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm text-indigo-700 font-bold overflow-hidden">
+                            <img src="https://ui-avatars.com/api/?name=Admin+Sekolah&background=random" alt="Admin" />
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="w-full max-w-screen-2xl mx-auto p-4 md:p-6 2xl:p-10">
+                <slot />
+            </main>
+
+        </div>
+    </div>
+
+    <script>
+        // 1. Setup Icons
+        lucide.createIcons();
+
+        // 2. Sidebar Mobile Toggle
+        const sidebar = document.getElementById('sidebar');
+        const openBtn = document.getElementById('openSidebar');
+        const closeBtn = document.getElementById('closeSidebar');
+        const overlay = document.createElement('div'); // Create overlay for mobile
+
+        // Setup Overlay
+        overlay.className = 'fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden glass-effect';
+        document.body.appendChild(overlay);
+
+        function toggleSidebar(show) {
+            if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        openBtn.addEventListener('click', () => toggleSidebar(true));
+        closeBtn.addEventListener('click', () => toggleSidebar(false));
+        overlay.addEventListener('click', () => toggleSidebar(false));
+
+        // 3. Accordion Menu Logic
+        const accordions = document.querySelectorAll('.accordion-btn');
+
+        accordions.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const targetContent = document.getElementById(targetId);
+                const arrow = this.querySelector('.arrow-icon');
+
+                // Toggle Open Class
+                targetContent.classList.toggle('open');
+                arrow.classList.toggle('rotate');
+
+                // Optional: Close other menus (Accordion Style)
+                // accordions.forEach(otherBtn => {
+                //     if (otherBtn !== this) {
+                //         const otherId = otherBtn.getAttribute('data-target');
+                //         document.getElementById(otherId).classList.remove('open');
+                //         otherBtn.querySelector('.arrow-icon').classList.remove('rotate');
+                //     }
+                // });
+            });
+        });
+    </script>
+</body>
+</html>

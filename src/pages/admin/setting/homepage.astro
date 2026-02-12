@@ -1,0 +1,56 @@
+---
+// src/pages/admin/setting/homepage.astro
+export const prerender = false;
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import HomepageEditor from "@/components/admin/HomepageEditor.jsx";
+
+let sliderData = [];
+let settingsData = [];
+// Kita pisahkan errornya
+let sliderError = null; 
+let settingsError = null;
+
+try {
+  const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+  
+  const [resSlider, resSettings] = await Promise.all([
+    fetch(`${SCRIPT_URL}?action=get_all&table=tbl_sliders`),
+    fetch(`${SCRIPT_URL}?action=get_all&table=tbl_settings`)
+  ]);
+
+  const jsonSlider = await resSlider.json();
+  const jsonSettings = await resSettings.json();
+
+  // Cek Slider
+  if (jsonSlider.status === 'success') {
+    sliderData = jsonSlider.data;
+  } else {
+    sliderError = jsonSlider.message; // Simpan error khusus slider
+  }
+
+  // Cek Settings
+  if (jsonSettings.status === 'success') {
+    settingsData = jsonSettings.data;
+  } else {
+    settingsError = jsonSettings.message; // Simpan error khusus settings
+  }
+
+} catch (e) { 
+    sliderError = "Gagal koneksi server";
+    settingsError = "Gagal koneksi server";
+}
+---
+
+<AdminLayout title="Pengaturan Beranda">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900">Tampilan Web</h1>
+        <p class="text-slate-500">Sesuaikan konten yang tampil di halaman depan website sekolah.</p>
+    </div>
+
+    <HomepageEditor 
+        client:only="react" 
+        sliderData={sliderData} 
+        settingsData={settingsData}
+        sheetError={sliderError || settingsError} 
+    />
+</AdminLayout>

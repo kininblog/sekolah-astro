@@ -1,0 +1,173 @@
+---
+// src/components/HeroSlider.astro
+import 'swiper/css';
+import 'swiper/css/effect-fade';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
+// --- 1. LOGIKA FETCH DATA DARI DATABASE ---
+let slides = [];
+let isUsingDefault = false;
+
+try {
+    const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+    
+    // Debugging: Cek URL di terminal server
+    // console.log("Fetching sliders from:", SCRIPT_URL);
+
+    const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_sliders`);
+    const result = await response.json();
+
+    if (result.status === 'success' && Array.isArray(result.data) && result.data.length > 0) {
+        // Filter hanya yang 'Aktif' dan urutkan berdasarkan 'order'
+        slides = result.data
+            .filter(item => item.active === 'Aktif')
+            .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+    }
+} catch (error) {
+    console.error("Gagal mengambil data slider:", error);
+}
+
+// --- 2. DATA DEFAULT (FALLBACK) ---
+// Jika database kosong atau fetch gagal, pakai data ini agar web tetap cantik
+if (slides.length === 0) {
+    isUsingDefault = true;
+    slides = [
+        {
+            id: 'default-1',
+            image_url: "https://cdn.prod.website-files.com/68e0f069e7077842f6665fd3/68e34fd9d64cd858d3f468e1_hero-img-p-2000.webp",
+            title_small: "Selamat Datang di",
+            title_big: "SEKOLAH KAMI",
+            description: "Mewujudkan generasi cerdas, berkarakter, dan berdaya saing global dengan pendidikan berkualitas.",
+            button_text: "Tentang Kami",
+            button_link: "#profil"
+        },
+        {
+            id: 'default-2',
+            image_url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop",
+            title_small: "Penerimaan",
+            title_big: "PPDB 2026",
+            description: "Pendaftaran Peserta Didik Baru Telah Dibuka. Segera daftarkan putra-putri Anda.",
+            button_text: "Daftar Sekarang",
+            button_link: "/ppdb"
+        }
+    ];
+}
+---
+
+<section class="relative w-full h-[100dvh] min-h-[600px] bg-slate-900 overflow-hidden">
+    
+    {/* Swiper Container */}
+    <div class="swiper myHeroSwiper w-full h-full">
+        <div class="swiper-wrapper">
+            
+            {/* --- LOOPING DATA SLIDES --- */}
+            {slides.map((slide, index) => (
+                <div class="swiper-slide relative flex items-center justify-center overflow-hidden">
+                    
+                    {/* Background Image */}
+                    <div class="absolute inset-0 w-full h-full z-0">
+                        <img 
+                            src={slide.image_url} 
+                            alt={slide.title_big} 
+                            class="w-full h-full object-cover object-center animate-subtle-zoom"
+                            loading={index === 0 ? "eager" : "lazy"} 
+                            onError={(e) => { e.target.src = "https://via.placeholder.com/1920x1080?text=Image+Not+Found"; }} // Fallback jika gambar rusak
+                        />
+                    </div>
+
+                    {/* Overlay Gradient */}
+                    <div class="absolute inset-0 bg-slate-900/40 mix-blend-multiply z-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent z-10"></div>
+
+                    {/* Content Text */}
+                    <div class="relative z-20 container mx-auto px-4 md:px-12 h-full flex flex-col justify-center">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pb-20 lg:pb-0">
+                            
+                            {/* Kiri: Judul */}
+                            <div class="lg:col-span-7 flex flex-col justify-end text-center lg:text-left">
+                                {slide.title_small && (
+                                    <span class="text-white text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide mb-2 block drop-shadow-md animate-fade-in-up">
+                                        {slide.title_small}
+                                    </span>
+                                )}
+                                <h1 class="text-white text-[15vw] md:text-[8rem] lg:text-[9rem] leading-[0.9] font-extrabold tracking-tight drop-shadow-xl animate-fade-in-up delay-100 uppercase">
+                                    {slide.title_big}
+                                </h1>
+                            </div>
+
+                            {/* Kanan: Deskripsi & Tombol */}
+                            <div class="lg:col-span-5 flex flex-col justify-end pb-4 lg:pb-10">
+                                {slide.description && (
+                                    <p class="text-white/90 text-lg md:text-xl font-medium leading-relaxed max-w-lg mx-auto lg:ml-auto text-center lg:text-left drop-shadow-md lg:border-l-4 lg:border-white/30 lg:pl-6 animate-fade-in-up delay-200">
+                                        {slide.description}
+                                    </p>
+                                )}
+                                
+                                {slide.button_text && (
+                                    <div class="mt-8 lg:ml-auto w-full lg:w-auto text-center lg:text-left animate-fade-in-up delay-300">
+                                        <a href={slide.button_link || '#'} class="inline-flex bg-white text-slate-900 hover:bg-indigo-50 px-8 py-4 rounded-full font-bold transition duration-300 items-center gap-2 group shadow-lg">
+                                            {slide.button_text}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ))}
+
+        </div>
+        
+        {/* Pagination Dots */}
+        <div class="swiper-pagination !bottom-8 lg:!bottom-12 !w-auto !left-1/2 lg:!left-auto lg:!right-12 !transform !-translate-x-1/2 lg:!translate-x-0"></div>
+    </div>
+</section>
+
+<style>
+    /* ANIMASI SAMA SEPERTI SEBELUMNYA */
+    @keyframes subtle-zoom { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+    .animate-subtle-zoom { animation: subtle-zoom 20s ease-in-out infinite alternate; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; }
+    .delay-100 { animation-delay: 0.1s; } 
+    .delay-200 { animation-delay: 0.3s; } 
+    .delay-300 { animation-delay: 0.5s; }
+
+    /* SWIPER STYLE */
+    :global(.swiper-pagination-bullet) { background: rgba(255, 255, 255, 0.4); width: 10px; height: 10px; opacity: 1; margin: 0 6px !important; transition: all 0.3s ease; }
+    :global(.swiper-pagination-bullet-active) { background: #ffffff; width: 30px; border-radius: 6px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+</style>
+
+<script>
+    import Swiper from 'swiper';
+    import { Autoplay, EffectFade, Pagination } from 'swiper/modules';
+
+    const initSwiper = () => {
+        new Swiper(".myHeroSwiper", {
+            modules: [Autoplay, EffectFade, Pagination],
+            loop: true,
+            effect: "fade",
+            fadeEffect: { crossFade: true },
+            speed: 1200,
+            autoplay: {
+                delay: 6000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+        });
+    };
+
+    // Support Astro View Transitions
+    document.addEventListener('astro:page-load', initSwiper);
+    // Fallback Initial Load
+    initSwiper();
+</script>

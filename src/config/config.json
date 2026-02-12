@@ -35,8 +35,8 @@
 
   "navigation_button": {
     "enable": true,
-    "label": "Github",
-    "link": "https://github.com/zeon-studio/astroplate"
+    "label": "Login",
+    "link": "/login"
   },
 
   "google_tag_manager": {

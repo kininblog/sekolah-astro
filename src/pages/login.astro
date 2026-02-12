@@ -1,0 +1,241 @@
+---
+// src/pages/login.astro
+export const prerender = false; // Wajib False agar tidak di-cache statis
+import "@/styles/main.css"; 
+---
+
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - SekolahCMS</title>
+    
+    <script is:inline src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Pattern Grid Halus untuk Desktop */
+        .pattern-grid {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+    </style>
+</head>
+<body class="h-full antialiased text-slate-900">
+
+    <div class="flex min-h-full">
+        
+        <div class="relative hidden w-0 flex-1 lg:block bg-slate-900">
+            <div class="absolute inset-0 h-full w-full object-cover bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900"></div>
+            <div class="absolute inset-0 pattern-grid opacity-20"></div>
+
+            <div class="relative z-10 flex flex-col justify-between h-full p-12">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-500/20 border border-indigo-500/30 p-2 rounded-lg backdrop-blur-sm">
+                        <i data-lucide="layout-grid" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <span class="text-white text-xl font-bold tracking-tight">Sekolah<span class="text-indigo-400">CMS</span></span>
+                </div>
+
+                <div class="max-w-md">
+                    <h2 class="text-3xl font-bold text-white mb-4">Kelola Konten Sekolah Lebih Efisien.</h2>
+                    <p class="text-indigo-200 text-lg leading-relaxed">
+                        Platform terintegrasi untuk publikasi berita, manajemen siswa, dan informasi akademik dalam satu pintu.
+                    </p>
+                    
+                    <div class="mt-8 grid grid-cols-2 gap-4">
+                        <div class="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
+                            <div class="text-2xl font-bold text-white">Fast</div>
+                            <div class="text-indigo-300 text-sm">Performance</div>
+                        </div>
+                        <div class="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
+                            <div class="text-2xl font-bold text-white">Secure</div>
+                            <div class="text-indigo-300 text-sm">Protection</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-xs text-slate-500">
+                    &copy; 2026 CMS Sekolah. v2.1.0
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-slate-50 lg:bg-white">
+            
+            <div class="mx-auto w-full max-w-sm lg:w-96 bg-white p-8 lg:p-0 rounded-2xl shadow-xl lg:shadow-none border border-slate-100 lg:border-none">
+                
+                <div class="lg:hidden text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 mb-4">
+                        <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900">SekolahCMS</h2>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest mt-1">Admin Portal</p>
+                </div>
+
+                <div class="hidden lg:block mb-8">
+                    <h2 class="text-2xl font-bold leading-9 tracking-tight text-slate-900">Selamat Datang</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">
+                        Masuk untuk mengakses dashboard admin.
+                    </p>
+                </div>
+
+                <form id="loginForm" class="space-y-6" novalidate>
+                    
+                    <div>
+                        <label for="username" class="block text-sm font-medium leading-6 text-slate-900">Username</label>
+                        <div class="mt-2 relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                            <input 
+                                id="username" 
+                                name="username" 
+                                type="text" 
+                                required 
+                                class="block w-full rounded-lg border-0 py-3 pl-10 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all"
+                                placeholder="Masukkan username"
+                            >
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium leading-6 text-slate-900">Password</label>
+                        <div class="mt-2 relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                            <input 
+                                id="password" 
+                                name="password" 
+                                type="password" 
+                                required 
+                                class="block w-full rounded-lg border-0 py-3 pl-10 pr-10 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all"
+                                placeholder="••••••••"
+                            >
+                            <button type="button" id="togglePass" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600">
+                            <label for="remember-me" class="ml-2 block text-sm leading-6 text-slate-600">Ingat saya</label>
+                        </div>
+                        <div class="text-sm leading-6">
+                            <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Lupa sandi?</a>
+                        </div>
+                    </div>
+
+                    <div id="mainError" class="hidden rounded-lg bg-red-50 p-3 border border-red-100 flex items-start gap-3">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 mt-0.5"></i>
+                        <div class="text-sm text-red-700" id="mainErrorText">Login gagal.</div>
+                    </div>
+
+                    <div>
+                        <button 
+                            type="submit" 
+                            id="submitBtn"
+                            class="flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-3 text-sm font-semibold leading-6 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-500 hover:shadow-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed items-center gap-2"
+                        >
+                            Masuk Dashboard
+                        </button>
+                    </div>
+                </form>
+                
+                <p class="lg:hidden mt-8 text-center text-xs text-slate-400">
+                    &copy; 2026 SekolahCMS System
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const form = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const togglePassBtn = document.getElementById('togglePass');
+        const submitBtn = document.getElementById('submitBtn');
+        const mainError = document.getElementById('mainError');
+        const mainErrorText = document.getElementById('mainErrorText');
+
+        // Toggle Password
+        togglePassBtn.addEventListener('click', () => {
+            const isPass = passwordInput.type === 'password';
+            passwordInput.type = isPass ? 'text' : 'password';
+            togglePassBtn.innerHTML = isPass 
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7c.84 0 1.67-.14 2.44-.43"/><line x1="2" x2="22" y1="2" y2="22"/></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+        });
+
+        // Clear Error on Type
+        [usernameInput, passwordInput].forEach(inp => {
+            inp.addEventListener('input', () => {
+                mainError.classList.add('hidden');
+                inp.classList.remove('ring-red-300', 'focus:ring-red-600');
+            });
+        });
+
+        // Submit Handler
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validasi Sederhana
+            if(!usernameInput.value || !passwordInput.value) {
+                mainErrorText.innerText = "Username dan Password wajib diisi.";
+                mainError.classList.remove('hidden');
+                if(!usernameInput.value) usernameInput.classList.add('ring-red-300', 'focus:ring-red-600');
+                if(!passwordInput.value) passwordInput.classList.add('ring-red-300', 'focus:ring-red-600');
+                return;
+            }
+
+            // Loading UI
+            const oriText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Verifikasi...
+            `;
+
+            try {
+                // --- UPDATE: MENEMBAK API AUTH BARU ---
+                // Endpoint ini akan menghasilkan HTTP Cookie
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
+                });
+
+                const data = await res.json();
+
+                if(res.ok && data.success) {
+                    // Simpan data user ke localStorage (hanya untuk tampilan 'Author' di Post Editor)
+                    // Keamanan utama sekarang ada di Cookie (HttpOnly) yang diurus server
+                    localStorage.setItem('admin_user', JSON.stringify(data.user));
+                    
+                    submitBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+                    submitBtn.innerHTML = '✅ Login Sukses!';
+                    
+                    setTimeout(() => window.location.href = '/admin', 800);
+                } else {
+                    throw new Error(data.message || 'Login gagal.');
+                }
+            } catch (err) {
+                mainErrorText.innerText = err.message || "Gagal terhubung ke server.";
+                mainError.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = oriText;
+            }
+        });
+    </script>
+</body>
+</html>
