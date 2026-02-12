@@ -1,105 +1,101 @@
 ---
 // src/pages/blog/[slug].astro
 
-// 1. WAJIB ADA: Agar fungsi getStaticPaths di bawah dijalankan
-export const prerender = true;
+// 1. UBAH KE MODE SERVER (SSR)
+// Agar halaman ini dibuat dadakan saat user mengeklik link
+export const prerender = false;
 
 import Base from "@/layouts/Base.astro";
+import { marked } from "marked";
 
-// --- FUNGSI UTAMA SSG ---
-export async function getStaticPaths() {
-  let posts = [];
-  
-  try {
+// 2. TANGKAP SLUG DARI URL
+const { slug } = Astro.params;
+
+// 3. FETCH DATA DARI GOOGLE SHEETS
+let post = null;
+try {
     const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
-    // Menggunakan action=get_all
-    const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_posts`);
-    const result = await response.json();
     
-    if (result.status === "success") {
-      // Filter hanya status published
-      posts = result.data.filter(p => {
-         const status = p.status ? p.status.toString().toLowerCase() : "";
-         return status === 'published';
-      });
+    // Kita fetch semua post lalu cari yang slug-nya cocok
+    // (Cache 1 menit agar tidak boros kuota Google)
+    const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_posts`);
+    
+    // Set Cache Header agar ngebut (disimpan di CDN Netlify selama 60 detik)
+    Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+
+    const result = await response.json();
+
+    if (result.status === 'success' && Array.isArray(result.data)) {
+        // Cari postingan yang slug-nya sama dengan URL
+        post = result.data.find((p) => p.slug === slug);
     }
-  } catch (error) {
-    console.error("Gagal mengambil paths:", error);
-  }
-
-  // Petakan setiap postingan menjadi halaman sendiri
-  return posts.map((post) => ({
-    params: { slug: post.slug }, 
-    props: { post },
-  }));
+} catch (error) {
+    console.error("Gagal mengambil postingan:", error);
 }
-// ------------------------
 
-const { post } = Astro.props;
-
-// Safety Check: Jika post tidak ditemukan (misal akses langsung url ngawur)
+// 4. JIKA POSTINGAN TIDAK DITEMUKAN -> 404
 if (!post) {
-  return Astro.redirect('/404');
+    return Astro.redirect('/404');
 }
 
-const { title, content, thumbnail, created_at, category, categories, seo_title, seo_desc } = post;
-
-// Logic Kategori: Ambil 'category' atau 'categories' (jaga-jaga nama kolom beda), lalu ambil yang pertama jika ada koma
-const displayCategory = (category || categories || 'Berita Sekolah').split(',')[0].trim();
+// 5. FORMAT CONTENT (Markdown to HTML)
+const content = marked.parse(post.content || "");
 ---
 
-<Base 
-   title={seo_title || title} 
-   meta_title={seo_title || title}
-   description={seo_desc || title}
-   image={thumbnail}
->
-  <section class="section pt-10 pb-20 bg-white">
+<Base title={post.title} description={post.summary} image={post.image_url}>
+  <section class="section pt-14">
     <div class="container">
-      <div class="max-w-4xl mx-auto">
-        
-        {/* Header Artikel */}
-        <div class="text-center mb-10">
-           {/* Badge Kategori */}
-           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-              {displayCategory}
-           </div>
+      <div class="row justify-center">
+        <article class="col-12 lg:col-8">
+            
+            {/* Header Artikel */}
+            <div class="text-center mb-12">
+                <span class="text-sm font-bold text-primary uppercase tracking-wider mb-2 block">
+                    {post.category || "Berita Sekolah"}
+                </span>
+                <h1 class="h2 mb-4">{post.title}</h1>
+                <ul class="flex justify-center items-center space-x-4 text-text/60 text-sm">
+                    <li class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        {new Date(post.created_at).toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        })}
+                    </li>
+                    <li class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        {post.author || "Admin"}
+                    </li>
+                </ul>
+            </div>
 
-           <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-             {title}
-           </h1>
+            {/* Gambar Utama */}
+            {post.image_url && (
+                <div class="rounded-2xl overflow-hidden mb-10 shadow-lg aspect-video">
+                    <img
+                        src={post.image_url}
+                        alt={post.title}
+                        class="w-full h-full object-cover"
+                        width={800}
+                        height={450}
+                    />
+                </div>
+            )}
 
-           <div class="flex items-center justify-center gap-4 text-slate-500 text-sm">
-             <span class="flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                {created_at ? new Date(created_at).toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '-'}
-             </span>
-           </div>
-        </div>
+            {/* Isi Artikel (HTML dari Markdown) */}
+            <div class="content prose prose-lg max-w-none prose-headings:font-bold prose-a:text-primary hover:prose-a:text-primary/80">
+                <div set:html={content} />
+            </div>
 
-        {/* Featured Image */}
-        {thumbnail && (
-          <div class="rounded-2xl overflow-hidden mb-12 shadow-xl shadow-slate-200 border border-slate-100">
-            <img 
-              src={thumbnail} 
-              alt={title} 
-              class="w-full h-auto object-cover max-h-[500px]" 
-            />
-          </div>
-        )}
+            {/* Tombol Kembali */}
+            <div class="mt-12 pt-8 border-t border-border">
+                <a href="/blog" class="btn btn-outline-primary">
+                    ← Kembali ke Berita
+                </a>
+            </div>
 
-        {/* Konten Artikel */}
-        <div class="prose prose-lg prose-slate max-w-none 
-            prose-headings:font-bold prose-headings:text-slate-800 
-            prose-p:text-slate-600 prose-p:leading-relaxed
-            prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline
-            prose-img:rounded-xl prose-img:shadow-lg
-            prose-blockquote:border-indigo-500 prose-blockquote:bg-indigo-50/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
-        ">
-            <article set:html={content} />
-        </div>
-
+        </article>
       </div>
     </div>
   </section>
