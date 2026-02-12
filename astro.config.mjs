@@ -11,6 +11,8 @@ import config from "./src/config/config.json";
 
 import node from "@astrojs/node";
 
+import netlify from "@astrojs/netlify";
+
 // https://astro.build/config
 export default defineConfig({
   // --- TAMBAHKAN BARIS INI (WAJIB) ---
@@ -46,7 +48,5 @@ export default defineConfig({
     extendDefaultPlugins: true,
   },
 
-  adapter: node({
-    mode: "standalone",
-  }),
+  adapter: netlify(),
 });
