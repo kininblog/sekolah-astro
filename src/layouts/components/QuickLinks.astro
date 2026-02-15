@@ -1,0 +1,133 @@
+---
+// src/components/QuickLinks.astro
+import 'swiper/css';
+
+let links = [];
+// Kita masih butuh settings hanya untuk warna dasarnya saja
+let settings = {}; 
+
+try {
+    const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
+    
+    // Fetch 2 tabel sekaligus
+    const [resLinks, resSettings] = await Promise.all([
+        fetch(`${SCRIPT_URL}?action=get_all&table=tbl_quick_links`),
+        fetch(`${SCRIPT_URL}?action=get_all&table=tbl_settings`)
+    ]);
+
+    const jsonLinks = await resLinks.json();
+    const jsonSettings = await resSettings.json();
+
+    if (jsonLinks.status === 'success' && Array.isArray(jsonLinks.data)) {
+        links = jsonLinks.data
+            .filter(item => item.active === 'Aktif')
+            .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+    }
+
+    if (jsonSettings.status === 'success' && Array.isArray(jsonSettings.data)) {
+        jsonSettings.data.forEach(item => {
+            settings[item.key] = item.value_text;
+        });
+    }
+} catch (error) {
+    console.error("Gagal load quick links:", error);
+}
+
+// Fallback Data Item (Jika kosong)
+if (links.length === 0) {
+    links = [
+        // Contoh data fallback dengan gambar berbeda-beda
+        { title: "Open Days", description: "Sample UWE Bristol campus life.", link_url: "#", image_url: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500&auto=format&fit=crop" },
+        { title: "Prospectus", description: "Request a copy of our latest prospectus.", link_url: "#", image_url: "" }, // Tidak ada gambar
+        { title: "Student Life", description: "Discover what it's like to live here.", link_url: "#", image_url: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=500&auto=format&fit=crop" },
+        { title: "Apply Now", description: "Ready to join us? Find out how.", link_url: "#", image_url: "" }
+    ];
+}
+
+// Fallback Warna Tema Dasar (Settingan global hanya untuk warna)
+const color1 = settings['home_quicklink_color_1'] || '#185f63';
+const color2 = settings['home_quicklink_color_2'] || '#134d50';
+// const bgImage global sudah tidak dipakai lagi di sini
+---
+
+<section class="w-full relative z-30">
+    
+    <div class="swiper splitBannerSwiper w-full h-full">
+        <div class="swiper-wrapper">
+            
+            {links.map((item, index) => {
+                // Logika ganjil/genap untuk warna dasar
+                const isEven = index % 2 === 0;
+                const normalColor = isEven ? color1 : color2;
+                const hoverColor = isEven ? color2 : color1;
+
+                return (
+                    <div class="swiper-slide h-auto">
+                        <a 
+                            href={item.link_url} 
+                            /* Menerapkan CSS Variables untuk warna dasar */
+                            style={`--bg-normal: ${normalColor}; --bg-hover: ${hoverColor};`}
+                            class="group block h-full w-full p-6 md:p-8 lg:p-10 transition-colors duration-500 flex flex-col justify-between min-h-[200px] md:min-h-[240px] bg-[var(--bg-normal)] hover:bg-[var(--bg-hover)] relative overflow-hidden"
+                        >
+                            {/* BACKGROUND IMAGE OPTIONAL PER ITEM */}
+                            {/* Cek apakah item ini punya URL gambar di database */}
+                            {item.image_url && (
+                                <div 
+                                    class="absolute inset-0 z-0 opacity-10 bg-cover bg-center mix-blend-overlay pointer-events-none transition-opacity duration-500 group-hover:opacity-20" 
+                                    style={`background-image: url('${item.image_url}');`}
+                                ></div>
+                            )}
+
+                            <div class="relative z-10" data-aos="fade-up" data-aos-delay={index * 100}>
+                                <h3 class="font-extrabold text-xl md:text-2xl text-white mb-2 md:mb-3 tracking-tight">
+                                    {item.title}
+                                </h3>
+                                <p class="text-white/80 text-sm md:text-base font-medium leading-relaxed max-w-sm line-clamp-3">
+                                    {item.description}
+                                </p>
+                            </div>
+                            
+                            <div class="relative z-10 mt-6 md:mt-10" data-aos="fade-up" data-aos-delay={(index * 100) + 100}>
+                                <span class="inline-flex items-center text-xs md:text-sm text-white/70 font-bold uppercase tracking-wider group-hover:text-white transition-colors duration-300">
+                                    {item.title}
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 ml-2 transform translate-x-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-300">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                    </svg>
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                );
+            })}
+
+        </div>
+    </div>
+
+</section>
+
+<script>
+    import Swiper from 'swiper';
+    import { Autoplay } from 'swiper/modules';
+
+    const initSplitBannerSwiper = () => {
+        new Swiper(".splitBannerSwiper", {
+            modules: [Autoplay],
+            spaceBetween: 0, 
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true
+            },
+            breakpoints: {
+                0: { slidesPerView: 1 },
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+                1280: { slidesPerView: 3 }
+            }
+        });
+    };
+
+    document.addEventListener('astro:page-load', initSplitBannerSwiper);
+    initSplitBannerSwiper();
+</script>

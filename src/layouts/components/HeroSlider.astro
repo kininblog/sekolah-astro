@@ -1,25 +1,16 @@
 ---
 // src/components/HeroSlider.astro
-import 'swiper/css';
-import 'swiper/css/effect-fade';
-import 'swiper/css/pagination';
-import 'swiper/css/navigation';
 
-// --- 1. LOGIKA FETCH DATA DARI DATABASE ---
+import 'swiper/css';
+
 let slides = [];
-let isUsingDefault = false;
 
 try {
     const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
-    
-    // Debugging: Cek URL di terminal server
-    // console.log("Fetching sliders from:", SCRIPT_URL);
-
     const response = await fetch(`${SCRIPT_URL}?action=get_all&table=tbl_sliders`);
     const result = await response.json();
 
     if (result.status === 'success' && Array.isArray(result.data) && result.data.length > 0) {
-        // Filter hanya yang 'Aktif' dan urutkan berdasarkan 'order'
         slides = result.data
             .filter(item => item.active === 'Aktif')
             .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
@@ -28,107 +19,144 @@ try {
     console.error("Gagal mengambil data slider:", error);
 }
 
-// --- 2. DATA DEFAULT (FALLBACK) ---
-// Jika database kosong atau fetch gagal, pakai data ini agar web tetap cantik
+// FALLBACK DATA
 if (slides.length === 0) {
-    isUsingDefault = true;
     slides = [
         {
-            id: 'default-1',
             image_url: "https://cdn.prod.website-files.com/68e0f069e7077842f6665fd3/68e34fd9d64cd858d3f468e1_hero-img-p-2000.webp",
             title_small: "Selamat Datang di",
             title_big: "SEKOLAH KAMI",
-            description: "Mewujudkan generasi cerdas, berkarakter, dan berdaya saing global dengan pendidikan berkualitas.",
+            description: "Mewujudkan generasi cerdas, berkarakter, dan berdaya saing global.",
             button_text: "Tentang Kami",
             button_link: "#profil"
         },
         {
-            id: 'default-2',
-            image_url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop",
-            title_small: "Penerimaan",
-            title_big: "PPDB 2026",
-            description: "Pendaftaran Peserta Didik Baru Telah Dibuka. Segera daftarkan putra-putri Anda.",
-            button_text: "Daftar Sekarang",
-            button_link: "/ppdb"
+            image_url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1920&auto=format&fit=crop",
+            title_small: "Fasilitas Modern",
+            title_big: "RUANG BELAJAR",
+            description: "Lingkungan yang nyaman dan interaktif untuk mendukung potensi maksimal setiap siswa.",
+            button_text: "Lihat Fasilitas",
+            button_link: "#fasilitas"
         }
     ];
 }
 ---
 
-<section class="relative w-full h-[100dvh] min-h-[600px] bg-slate-900 overflow-hidden">
+<section class="relative w-full h-[100dvh] min-h-[600px] bg-slate-900 overflow-hidden" aria-label="Hero Slider">
     
-    {/* Swiper Container */}
     <div class="swiper myHeroSwiper w-full h-full">
         <div class="swiper-wrapper">
             
-            {/* --- LOOPING DATA SLIDES --- */}
             {slides.map((slide, index) => (
                 <div class="swiper-slide relative flex items-center justify-center overflow-hidden">
                     
-                    {/* Background Image */}
+                    {/* Background Image - LCP OPTIMIZED */}
                     <div class="absolute inset-0 w-full h-full z-0">
                         <img 
                             src={slide.image_url} 
-                            alt={slide.title_big} 
+                            alt={slide.title_big || "Banner Sekolah"} 
+                            width="1920" 
+                            height="1080"
                             class="w-full h-full object-cover object-center animate-subtle-zoom"
+                            
+                            {/* OPTIMASI LCP: Slide pertama Eager & High Priority, sisanya Lazy */}
                             loading={index === 0 ? "eager" : "lazy"} 
-                            onError={(e) => { e.target.src = "https://via.placeholder.com/1920x1080?text=Image+Not+Found"; }} // Fallback jika gambar rusak
+                            fetchpriority={index === 0 ? "high" : "low"}
+                            decoding={index === 0 ? "sync" : "async"}
+                            
+                            onError={(e) => { e.target.src = "https://via.placeholder.com/1920x1080?text=Image+Not+Found"; }}
                         />
                     </div>
 
-                    {/* Overlay Gradient */}
-                    <div class="absolute inset-0 bg-slate-900/40 mix-blend-multiply z-10"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent z-10"></div>
+                    {/* Gradient Overlay */}
+                    <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/40 to-transparent z-10"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent z-10 md:hidden"></div>
 
-                    {/* Content Text */}
-                    <div class="relative z-20 container mx-auto px-4 md:px-12 h-full flex flex-col justify-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pb-20 lg:pb-0">
+                    {/* --- KONTEN --- */}
+                    <div class="relative z-20 container mx-auto px-6 md:px-24 h-full flex flex-col justify-center">
+                        {/* Menambahkan pb-32 di mobile agar teks tidak terlalu ke bawah dan tertutup quick link */}
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full pt-20 pb-32 lg:pb-0 lg:py-0">
                             
-                            {/* Kiri: Judul */}
-                            <div class="lg:col-span-7 flex flex-col justify-end text-center lg:text-left">
+                            <div class="lg:col-span-8 flex flex-col justify-center text-center lg:text-left">
                                 {slide.title_small && (
-                                    <span class="text-white text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide mb-2 block drop-shadow-md animate-fade-in-up">
+                                    <span class="text-white text-lg md:text-xl lg:text-2xl font-bold tracking-wide mb-3 block drop-shadow-md animate-fade-in-up">
                                         {slide.title_small}
                                     </span>
                                 )}
-                                <h1 class="text-white text-[15vw] md:text-[8rem] lg:text-[9rem] leading-[0.9] font-extrabold tracking-tight drop-shadow-xl animate-fade-in-up delay-100 uppercase">
+                                
+                                <h2 class="text-white text-[10vw] md:text-[4.5rem] lg:text-[6.5rem] leading-[1] font-extrabold tracking-tight drop-shadow-xl animate-fade-in-up delay-100 uppercase mb-6">
                                     {slide.title_big}
-                                </h1>
-                            </div>
+                                </h2>
 
-                            {/* Kanan: Deskripsi & Tombol */}
-                            <div class="lg:col-span-5 flex flex-col justify-end pb-4 lg:pb-10">
                                 {slide.description && (
-                                    <p class="text-white/90 text-lg md:text-xl font-medium leading-relaxed max-w-lg mx-auto lg:ml-auto text-center lg:text-left drop-shadow-md lg:border-l-4 lg:border-white/30 lg:pl-6 animate-fade-in-up delay-200">
+                                    <p class="text-white/90 text-base md:text-lg font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0 drop-shadow-md lg:border-l-4 lg:border-white/30 lg:pl-5 animate-fade-in-up delay-200 mb-8">
                                         {slide.description}
                                     </p>
                                 )}
                                 
                                 {slide.button_text && (
-                                    <div class="mt-8 lg:ml-auto w-full lg:w-auto text-center lg:text-left animate-fade-in-up delay-300">
-                                        <a href={slide.button_link || '#'} class="inline-flex bg-white text-slate-900 hover:bg-indigo-50 px-8 py-4 rounded-full font-bold transition duration-300 items-center gap-2 group shadow-lg">
+                                    <div class="flex justify-center lg:justify-start animate-fade-in-up delay-300">
+                                        <a 
+                                            href={slide.button_link || '#'} 
+                                            class="inline-flex bg-nasa-red hover:bg-red-700 text-white px-7 py-3.5 md:px-8 md:py-4 rounded-sm font-bold tracking-wider uppercase transition duration-300 items-center gap-2 shadow-lg"
+                                            aria-label={`Tombol ${slide.button_text}`} 
+                                        >
                                             {slide.button_text}
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:translate-x-1 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                            </svg>
                                         </a>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
+
                 </div>
             ))}
-
         </div>
         
-        {/* Pagination Dots */}
-        <div class="swiper-pagination !bottom-8 lg:!bottom-12 !w-auto !left-1/2 lg:!left-auto lg:!right-12 !transform !-translate-x-1/2 lg:!translate-x-0"></div>
+        {/* 3. PAGINATION THUMBNAIL (Diposisikan lebih tinggi: bottom-28) */}
+        {/* Menggunakan bottom-28 (112px) agar tidak tertutup -mt-16 (64px) dari Quick Links */}
+        <div class="absolute bottom-28 right-6 md:bottom-28 md:right-12 z-50 flex items-center gap-4">
+            <div class="flex items-center gap-2 md:gap-3 bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/10 shadow-2xl">
+                
+                {slides.map((slide, index) => (
+                    <button 
+                        data-index={index} 
+                        class="custom-pagination-btn opacity-50 relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-transparent hover:border-white hover:opacity-100 transition-all cursor-pointer"
+                        aria-label={`Go to slide ${index + 1}`}
+                    >
+                        {/* Lingkaran SVG (Progress Ring) */}
+                        <svg class="absolute inset-0 w-full h-full progress-ring" viewBox="0 0 50 50">
+                            <circle 
+                                class="progress-ring-circle" 
+                                stroke="white" 
+                                stroke-width="2" 
+                                fill="transparent" 
+                                r="23" 
+                                cx="25" 
+                                cy="25" 
+                                style="stroke-dasharray: 144.5; stroke-dashoffset: 144.5;"
+                            ></circle>
+                        </svg>
+                        {/* Thumbnail Foto Slide */}
+                        {/* Thumbnail diload malas (lazy) agar tidak mengganggu LCP gambar utama */}
+                        <img 
+                            src={slide.image_url} 
+                            alt={`Thumbnail ${index + 1}`} 
+                            class="w-full h-full object-cover"
+                            loading="lazy"
+                        >
+                    </button>
+                ))}
+
+            </div>
+        </div>
+        
     </div>
 </section>
 
 <style>
-    /* ANIMASI SAMA SEPERTI SEBELUMNYA */
+    .bg-nasa-red { background-color: #E03C31; }
+
     @keyframes subtle-zoom { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
     .animate-subtle-zoom { animation: subtle-zoom 20s ease-in-out infinite alternate; }
 
@@ -138,36 +166,71 @@ if (slides.length === 0) {
     .delay-200 { animation-delay: 0.3s; } 
     .delay-300 { animation-delay: 0.5s; }
 
-    /* SWIPER STYLE */
-    :global(.swiper-pagination-bullet) { background: rgba(255, 255, 255, 0.4); width: 10px; height: 10px; opacity: 1; margin: 0 6px !important; transition: all 0.3s ease; }
-    :global(.swiper-pagination-bullet-active) { background: #ffffff; width: 30px; border-radius: 6px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+    .progress-ring-circle {
+        transition: stroke-dashoffset 0.05s linear;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
 </style>
 
 <script>
     import Swiper from 'swiper';
-    import { Autoplay, EffectFade, Pagination } from 'swiper/modules';
+    import { Autoplay } from 'swiper/modules';
 
     const initSwiper = () => {
-        new Swiper(".myHeroSwiper", {
-            modules: [Autoplay, EffectFade, Pagination],
+        const swiper = new Swiper(".myHeroSwiper", {
+            modules: [Autoplay],
             loop: true,
-            effect: "fade",
-            fadeEffect: { crossFade: true },
-            speed: 1200,
+            speed: 1000, 
             autoplay: {
-                delay: 6000,
+                delay: 6000, 
                 disableOnInteraction: false,
                 pauseOnMouseEnter: true
             },
-            pagination: {
-                el: ".swiper-pagination",
-                clickable: true,
-            },
+            on: {
+                autoplayTimeLeft(s, time, progress) {
+                    const activeIndex = s.realIndex; 
+                    const buttons = document.querySelectorAll('.custom-pagination-btn');
+                    
+                    buttons.forEach((btn, idx) => {
+                        const circle = btn.querySelector('.progress-ring-circle') as SVGCircleElement;
+                        if (circle) {
+                            if (idx === activeIndex) {
+                                circle.style.strokeDashoffset = (144.5 * progress).toString();
+                                btn.classList.remove('opacity-50', 'border-transparent');
+                                btn.classList.add('border-white', 'opacity-100');
+                            } else {
+                                circle.style.strokeDashoffset = '144.5';
+                                btn.classList.add('opacity-50', 'border-transparent');
+                                btn.classList.remove('border-white', 'opacity-100');
+                            }
+                        }
+                    });
+                },
+                slideChange(s) {
+                    const activeIndex = s.realIndex;
+                    const buttons = document.querySelectorAll('.custom-pagination-btn');
+                    buttons.forEach((btn, idx) => {
+                        if (idx !== activeIndex) {
+                            const circle = btn.querySelector('.progress-ring-circle') as SVGCircleElement;
+                            if (circle) circle.style.strokeDashoffset = '144.5';
+                            btn.classList.add('opacity-50', 'border-transparent');
+                            btn.classList.remove('border-white', 'opacity-100');
+                        }
+                    });
+                }
+            }
+        });
+
+        const buttons = document.querySelectorAll('.custom-pagination-btn');
+        buttons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.getAttribute('data-index') || '0');
+                swiper.slideToLoop(idx); 
+            });
         });
     };
 
-    // Support Astro View Transitions
     document.addEventListener('astro:page-load', initSwiper);
-    // Fallback Initial Load
     initSwiper();
 </script>

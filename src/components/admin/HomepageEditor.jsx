@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import SliderManager from './SliderManager'; // Import komponen slider yang sudah ada
+import QuickLinkManager from './QuickLinkManager'; // IMPORT KOMPONEN BARU KITA
 
-export default function HomepageEditor({ sliderData, settingsData, sheetError }) {
+// 1. Tambahkan quickLinkData di props
+export default function HomepageEditor({ sliderData, settingsData, quickLinkData, sheetError }) {
     const [activeTab, setActiveTab] = useState('slider');
     const [settings, setSettings] = useState(
         // Convert Array dari DB menjadi Object biar mudah dipanggil (settings.kepsek_nama)
@@ -74,6 +76,12 @@ export default function HomepageEditor({ sliderData, settingsData, sheetError })
                         <button onClick={() => setActiveTab('slider')} className={`text-left px-4 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 ${activeTab === 'slider' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <span>🖼️</span> Hero Slider
                         </button>
+                        
+                        {/* 2. TOMBOL NAVIGASI MENU QUICK LINKS DI SIDEBAR */}
+                        <button onClick={() => setActiveTab('quicklinks')} className={`text-left px-4 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 ${activeTab === 'quicklinks' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <span>⚡</span> Quick Links
+                        </button>
+
                         <button onClick={() => setActiveTab('kepsek')} className={`text-left px-4 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 ${activeTab === 'kepsek' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}>
                             <span>👨‍🏫</span> Sambutan Kepsek
                         </button>
@@ -96,9 +104,88 @@ export default function HomepageEditor({ sliderData, settingsData, sheetError })
                         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
                             <h2 className="text-xl font-bold mb-4">Hero Banner Slider</h2>
                             <p className="text-slate-500 text-sm mb-6">Gambar besar yang muncul pertama kali saat website dibuka.</p>
-                            {/* Kita panggil komponen SliderManager yg sudah dibuat */}
                             <SliderManager initialData={sliderData} sheetError={sheetError} /> 
                         </div>
+                    </div>
+                )}
+
+                {/* --- TAB BARU: QUICK LINKS --- */}
+                {/* --- TAB BARU: QUICK LINKS --- */}
+                {activeTab === 'quicklinks' && (
+                    <div className="animate-fade-in space-y-6">
+                        
+                        {/* 1. KOTAK PENGATURAN TEMA (BARU) */}
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h2 className="text-xl font-bold mb-6">Tema Tampilan Quick Links</h2>
+                            <form onSubmit={(e) => handleSaveSettings(e, ['home_quicklink_color_1', 'home_quicklink_color_2', 'home_quicklink_image'])}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    
+                                    {/* Input Warna 1 */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Warna Kotak (Ganjil)</label>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="color" 
+                                                className="h-10 w-12 cursor-pointer border rounded bg-white p-1" 
+                                                value={settings['home_quicklink_color_1']?.value_text || '#185f63'} 
+                                                onChange={(e) => handleSettingChange('home_quicklink_color_1', 'value_text', e.target.value)} 
+                                            />
+                                            <input 
+                                                type="text" 
+                                                className="w-full border rounded-lg p-2 flex-1 uppercase font-mono text-sm" 
+                                                value={settings['home_quicklink_color_1']?.value_text || '#185f63'} 
+                                                onChange={(e) => handleSettingChange('home_quicklink_color_1', 'value_text', e.target.value)} 
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Input Warna 2 */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Warna Kotak (Genap)</label>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="color" 
+                                                className="h-10 w-12 cursor-pointer border rounded bg-white p-1" 
+                                                value={settings['home_quicklink_color_2']?.value_text || '#134d50'} 
+                                                onChange={(e) => handleSettingChange('home_quicklink_color_2', 'value_text', e.target.value)} 
+                                            />
+                                            <input 
+                                                type="text" 
+                                                className="w-full border rounded-lg p-2 flex-1 uppercase font-mono text-sm" 
+                                                value={settings['home_quicklink_color_2']?.value_text || '#134d50'} 
+                                                onChange={(e) => handleSettingChange('home_quicklink_color_2', 'value_text', e.target.value)} 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Input Gambar Pola */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">URL Gambar Pola (Samar)</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full border rounded-lg p-2 text-sm" 
+                                            value={settings['home_quicklink_image']?.value_text || ''} 
+                                            placeholder="Kosongkan untuk default..." 
+                                            onChange={(e) => handleSettingChange('home_quicklink_image', 'value_text', e.target.value)} 
+                                        />
+                                    </div>
+
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-slate-100 text-right">
+                                    <button disabled={loading} className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-indigo-700 shadow-sm">
+                                        {loading ? 'Menyimpan...' : 'Simpan Tema'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* 2. KOTAK KONTEN ITEM (YANG SUDAH ADA) */}
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+                            <h2 className="text-xl font-bold mb-2">Item Menu Quick Links</h2>
+                            <p className="text-slate-500 text-sm mb-6">Kelola konten judul dan deskripsi menu akses cepat.</p>
+                            <QuickLinkManager initialData={quickLinkData} sheetError={sheetError} />
+                        </div>
+
                     </div>
                 )}
 
@@ -142,7 +229,6 @@ export default function HomepageEditor({ sliderData, settingsData, sheetError })
                                             onChange={(e) => handleSettingChange('home_kepsek_foto', 'value_text', e.target.value)}
                                             placeholder="https://..."
                                         />
-                                        {/* Nanti bisa ditambah fitur upload file ke Drive kayak di GuruForm */}
                                     </div>
                                 </div>
                                 <div className="mt-6 pt-4 border-t text-right">

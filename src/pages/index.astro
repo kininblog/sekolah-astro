@@ -7,6 +7,8 @@ import CallToAction from "@/partials/CallToAction.astro";
 import Testimonial from "@/partials/Testimonial.astro";
 import { FaCheck } from "react-icons/fa";
 
+import QuickLinks from "@/components/QuickLinks.astro"; // <-- IMPORT INI
+
 // 1. UBAH JADI TRUE (STATIC MODE)
 export const prerender = false;
 
@@ -22,6 +24,7 @@ const { banner, features } = homepage.data;
 <Base>
 {/* 1. HERO SLIDER (Kita pasang di paling atas) */}
   <HeroSlider />
+  <QuickLinks />
   <!-- Banner -->
   <section class="section pt-14">
     <div class="container">

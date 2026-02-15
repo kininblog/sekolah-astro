@@ -6,38 +6,52 @@ import HomepageEditor from "@/components/admin/HomepageEditor.jsx";
 
 let sliderData = [];
 let settingsData = [];
+let quickLinkData = []; // <-- 1. Tambah variabel data quick link
+
 // Kita pisahkan errornya
 let sliderError = null; 
 let settingsError = null;
+let quickLinkError = null; // <-- 2. Tambah variabel error quick link
 
 try {
   const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL;
   
-  const [resSlider, resSettings] = await Promise.all([
+  // 3. Tambahkan fetch tabel tbl_quick_links ke dalam urutan Promise.all
+  const [resSlider, resSettings, resQuickLink] = await Promise.all([
     fetch(`${SCRIPT_URL}?action=get_all&table=tbl_sliders`),
-    fetch(`${SCRIPT_URL}?action=get_all&table=tbl_settings`)
+    fetch(`${SCRIPT_URL}?action=get_all&table=tbl_settings`),
+    fetch(`${SCRIPT_URL}?action=get_all&table=tbl_quick_links`) // <-- Fetch baru
   ]);
 
   const jsonSlider = await resSlider.json();
   const jsonSettings = await resSettings.json();
+  const jsonQuickLink = await resQuickLink.json(); // <-- 4. Parse JSON baru
 
   // Cek Slider
   if (jsonSlider.status === 'success') {
     sliderData = jsonSlider.data;
   } else {
-    sliderError = jsonSlider.message; // Simpan error khusus slider
+    sliderError = jsonSlider.message; 
   }
 
   // Cek Settings
   if (jsonSettings.status === 'success') {
     settingsData = jsonSettings.data;
   } else {
-    settingsError = jsonSettings.message; // Simpan error khusus settings
+    settingsError = jsonSettings.message; 
+  }
+
+  // 5. Cek Quick Link (TAMBAHAN BARU)
+  if (jsonQuickLink.status === 'success') {
+    quickLinkData = jsonQuickLink.data;
+  } else {
+    quickLinkError = jsonQuickLink.message; 
   }
 
 } catch (e) { 
     sliderError = "Gagal koneksi server";
     settingsError = "Gagal koneksi server";
+    quickLinkError = "Gagal koneksi server"; // <-- Handle error catch
 }
 ---
 
@@ -51,6 +65,7 @@ try {
         client:only="react" 
         sliderData={sliderData} 
         settingsData={settingsData}
-        sheetError={sliderError || settingsError} 
+        quickLinkData={quickLinkData} {/* <-- 6. Kirim datanya ke Editor */}
+        sheetError={sliderError || settingsError || quickLinkError} {/* <-- 7. Gabungkan peringatan errornya */}
     />
 </AdminLayout>

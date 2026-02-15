@@ -1,5 +1,6 @@
 ---
 import TwSizeIndicator from "@/components/TwSizeIndicator.astro";
+import 'aos/dist/aos.css';
 import config from "@/config/config.json";
 import theme from "@/config/theme.json";
 import { plainify } from "@/lib/utils/textConverter";
@@ -197,5 +198,25 @@ const { title, meta_title, description, image, noindex, canonical } =
       <slot />
     </main>
     <Footer />
+
+    <script>
+    import AOS from 'aos';
+
+    const initAOS = () => {
+        AOS.init({
+            duration: 800, // Durasi animasi (ms)
+            once: true,    // Animasi hanya jalan sekali saat di-scroll ke bawah
+            offset: 100,   // Jarak scroll sebelum animasi mulai
+            easing: 'ease-out-cubic', // Efek transisi yang lebih halus
+        });
+    };
+
+    // Jalankan saat pertama kali web diload
+    initAOS();
+    
+    // Jalankan ulang saat pindah halaman (jika pakai Astro View Transitions)
+    document.addEventListener('astro:page-load', initAOS);
+</script>
+
   </body>
 </html>
